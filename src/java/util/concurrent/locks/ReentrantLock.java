@@ -130,13 +130,13 @@ public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, j
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if (compareAndSetState(0, acquires)) {//CAS修改state
+                if (compareAndSetState(0, acquires)) { //CAS修改state
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) {
-                int nextc = c + acquires;//计算重入后的state
+            else if (current == getExclusiveOwnerThread()) { //判断当前线程是否为获取锁的线程来决定获取操作是否成功
+                int nextc = c + acquires; //计算重入后的state
                 if (nextc < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
                 setState(nextc);
