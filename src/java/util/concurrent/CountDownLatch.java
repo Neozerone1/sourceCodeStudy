@@ -154,6 +154,10 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * @since 1.5
  * @author Doug Lea
  */
+
+/**
+ * 满足在主线程开启多个线程去并行执行任务，并且主线程需要等待所有子线程执行完毕再汇总的场景
+ */
 public class CountDownLatch extends AbstractQueuedSynchronizer {
     /**
      * Synchronization control For CountDownLatch.
@@ -176,6 +180,11 @@ public class CountDownLatch extends AbstractQueuedSynchronizer {
             return (getState() == 0) ? 1 : -1;
         }
 
+        /**
+         * 循环CAS，知道当前线程完成CAS使得计数器值减一并更新到state
+         * @param releases
+         * @return
+         */
         protected boolean tryReleaseShared(int releases) {
             // Decrement count; signal when transition to zero
             for (;;) {

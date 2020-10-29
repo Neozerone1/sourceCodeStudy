@@ -438,13 +438,17 @@ public class CopyOnWriteArrayList<E>
      */
     public boolean add(E e) {
         final ReentrantLock lock = this.lock;
-        lock.lock();//加锁
+        lock.lock();//加锁，保证写此案城在同一时刻只有一个
         try {
+            //获取旧数组引用
             Object[] elements = getArray();
             int len = elements.length;
             //新增元素追加到最后一个索引位
+            //实际上是创建了一个新的数组，并将旧数组的数据复制到新数组中
             Object[] newElements = Arrays.copyOf(elements, len + 1);
+            //往新数组中添加数据
             newElements[len] = e;
+            //将旧数组引用指向新数组
             setArray(newElements);
             return true;
         } finally {

@@ -448,12 +448,14 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Links e as last element.
      */
-    /**入列，插入到队列尾*/
+    /**入列，插入到队列尾：定位为节点 + 利用cas插入节点到队尾*/
     private void linkLast(E e) {
         checkNotNull(e);
+        //入队前，创建一个入队节点
         final Node<E> newNode = new Node<E>(e);
 
         restartFromTail:
+        //死循环，入队不成功反复入队
         for (;;)
             //从tail节点往后寻找last节点
             for (Node<E> t = tail, p = t, q;;) {

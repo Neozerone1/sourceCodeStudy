@@ -126,7 +126,7 @@ public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, j
          * Performs non-fair tryLock.  tryAcquire is implemented in
          * subclasses, but both need nonfair try for trylock method.
          */
-        final boolean nonfairTryAcquire(int acquires) {
+        final boolean nonfairTryAcquire(int acquires) {  //非公平锁的实现，没有队列维护，只要状态更新成功就算获取锁
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
@@ -135,24 +135,24 @@ public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, j
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) { //判断当前线程是否为获取锁的线程来决定获取操作是否成功
-                int nextc = c + acquires; //计算重入后的state
+            else if (current == getExclusiveOwnerThread()) { //判断当前线程是否为获取锁的线程 来决定获取操作是否成功
+                int nextc = c + acquires; //计算重入后的state，状态值增加-->意味着释放时候要减少状态值
                 if (nextc < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
                 setState(nextc);
-                return true;
+                return true; //获取同步状态成功
             }
             return false;
         }
 
         protected final boolean tryRelease(int releases) {
-            int c = getState() - releases;//计算释放后的state值
+            int c = getState() - releases; //计算释放后的state值
             if (Thread.currentThread() != getExclusiveOwnerThread())
                 throw new IllegalMonitorStateException();
             boolean free = false;
             if (c == 0) {
-                free = true;//锁全部释放，可以唤醒下一个等待线程
-                setExclusiveOwnerThread(null);//设置锁持有线程为null
+                free = true; //锁全部释放，可以唤醒下一个等待线程
+                setExclusiveOwnerThread(null); //设置锁持有线程为null
             }
             setState(c);
             return free;
@@ -231,19 +231,19 @@ public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, j
          * Fair version of tryAcquire.  Don't grant access unless
          * recursive call or no waiters or is first.
          */
-        protected final boolean tryAcquire(int acquires) {
+        protected final boolean tryAcquire(int acquires) {  //公平锁的实现
             final Thread current = Thread.currentThread();
             int c = getState();//获取锁状态state
             if (c == 0) {
-                if (!hasQueuedPredecessors() && //判断当前线程是否还有前节点
-                    compareAndSetState(0, acquires)) {//CAS修改state
+                if (!hasQueuedPredecessors() && //判断当前线程是否还有前节点-------->与非公平锁唯一的区别之处，保证了锁的获取遵循FIFO
+                    compareAndSetState(0, acquires)) { //CAS修改state
                     //获取锁成功，设置锁的持有线程为当前线程
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) {//当前线程已经持有锁
-                int nextc = c + acquires;//重入
+            else if (current == getExclusiveOwnerThread()) { //当前线程已经持有锁
+                int nextc = c + acquires; //重入
                 if (nextc < 0)
                     throw new Error("Maximum lock count exceeded");
                 setState(nextc);//更新state状态

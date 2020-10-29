@@ -271,7 +271,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer
      * Synchronization implementation for ReentrantReadWriteLock.
      * Subclassed into fair and nonfair versions.
      */
-    //自定义同步器
+    //自定义同步器，主要实现的就是在同步状态（一个整形变量）上维护多个线程和一个写线程的状态
     abstract static class Sync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = 6317671515068378041L;
 
@@ -280,7 +280,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer
          * Lock state is logically divided into two unsigned shorts:
          * The lower one representing the exclusive (writer) lock hold count,
          * and the upper the shared (reader) hold count.
-         * 低16位代表独占锁持有数，高16位代表共享锁持有数
+         * 低16位代表独占锁持有数（写），高16位代表共享锁持有数（读）
          */
 
         static final int SHARED_SHIFT   = 16;
@@ -414,7 +414,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer
             setState(nextc);
             return free;
         }
-        //获取独占锁
+        //获取独占锁，即为写锁
         protected final boolean tryAcquire(int acquires) {
             /*
              * Walkthrough:
@@ -429,8 +429,9 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer
              */
             Thread current = Thread.currentThread();
             int c = getState();
-            int w = exclusiveCount(c);//获取持有写锁数量
+            int w = exclusiveCount(c); //获取持有写锁数量
             if (c != 0) {
+                //存在读锁或者当前获取线程不是已经获取写锁的线程
                 // (Note: if c != 0 and w == 0 then shared count != 0)
                 if (w == 0 || current != getExclusiveOwnerThread())
                     return false;
